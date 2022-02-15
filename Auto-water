@@ -1,0 +1,166 @@
+//This is a automatic watering of plants using arduino LCD and moisture sensor with time alive display in LCD
+#include <LiquidCrystal.h>
+// Creates an LCD object. Parameters: (rs, enable, d4, d5, d6, d7)
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+
+int period = 50;
+int period2 = 1505;
+int period3 = 1000;
+
+int s ;
+int m ;
+int h ;
+int d;
+
+int moisture_sensor  = A0;
+int moisture;
+int limit = 600;
+int pump = 3;
+int led = 13;
+
+unsigned long time_now = 0;
+unsigned long time_now2 = 0;
+unsigned long time_now3 = 0;
+
+unsigned long millismaxval =4000000000;      //4,294,967,295
+extern volatile unsigned long timer0_millis;
+
+void setup()
+{
+  lcd.begin(16, 2);
+  lcd.clear();
+  
+ 
+  pinMode(moisture_sensor,INPUT);
+  pinMode(pump,OUTPUT);
+  pinMode(led,OUTPUT);
+}
+
+void loop() 
+{
+    if(millis() >= time_now + period){
+        time_now += period;
+       
+      if(millis() >= time_now2 + period2){
+      time_now2 += period2; 
+      lcd.setCursor(15,0);
+      lcd.print (" ");
+         moisture = analogRead(moisture_sensor); 
+      }
+  lcd.setCursor(0,0);
+  lcd.print ("Moisture = ");
+  lcd.setCursor(12,0);
+  lcd.print (moisture);
+ 
+    if(moisture == 1023){
+      lcd.setCursor(12,1);
+      lcd.print (">Err");
+      digitalWrite(pump,LOW);
+      digitalWrite(led,LOW);   
+    }
+    
+  else if(moisture != 1023 && moisture > limit)
+    {
+   digitalWrite(pump,HIGH);
+    digitalWrite(led,HIGH);
+   
+
+    //lcd.clear();
+    lcd.setCursor(12,1);
+    lcd.print ("> ON");
+  
+    }
+ else 
+       {
+    digitalWrite(pump,LOW);
+    digitalWrite(led,LOW);
+   
+    lcd.setCursor(12,1);
+    lcd.print (">OFF");
+      }
+    }
+  
+  if(millis() >= time_now3 + period3){
+        time_now3 += period3; 
+     s++;   
+     if(s==60){
+      s=0;
+      m=m+1;
+      lcd.clear();
+      }
+     if(m==60)
+      {
+      m=0;
+      h=h+1;
+      lcd.clear();
+      }
+      if(h==24)
+      {
+      h=0;
+      d=d+1;
+      lcd.clear();
+      }
+ //lcd.clear();
+     lcd.setCursor(0,1);
+     lcd.print(d);
+     lcd.setCursor(2,1);
+     lcd.print("d");
+     lcd.setCursor(3,1);
+     lcd.print(h);
+     lcd.setCursor(5,1);
+     lcd.print(":");
+     lcd.setCursor(6,1);
+     lcd.print(m);
+     lcd.setCursor(8,1);
+     lcd.print(":");
+     lcd.setCursor(9,1);
+     lcd.print(s);
+   }
+
+//Anti-overflow error code bdelow
+if(millis() >= millismaxval){
+    noInterrupts ();
+    timer0_millis = 0;
+    interrupts ();
+    time_now = 0;
+   time_now2 = 0;
+   time_now3 = 0;
+    //time_now4 = 0;
+   ////time_now5 = 0;
+   //time_now6 = 0;
+    //time_now7 = 0;
+   lcd.clear();
+   lcd.setCursor(0,1);
+   lcd.print("  millis reset  ");
+}
+}
+
+
+  
+
+
+  
+  /* ********************************************************************** REFERENCE ONLY *******************************
+             from https://www.norwegiancreations.com/2017/09/arduino-tutorial-using-millis-instead-of-delay/
+             int period = 1000;
+             unsigned long time_now = 0;
+ 
+             void setup() {
+             Serial.begin(115200);
+             }
+ 
+             void loop() {
+             if(millis() >= time_now + period){
+             time_now += period;
+             Serial.println("Hello");
+              }
+   
+               //Run other code
+  ********************************************************************** REFERENCE ONLY **********************************
+  
+  https://www.norwegiancreations.com/2018/10/arduino-tutorial-avoiding-the-overflow-issue-when-using-millis-and-micros/
+  
+  */
+  
+  
